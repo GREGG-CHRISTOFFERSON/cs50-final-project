@@ -118,7 +118,6 @@ function getLocation()
 
 
 
-
     let lenDetails;
     let businessDetails;
     let photosArray = [];
@@ -141,6 +140,7 @@ function getLocation()
 
         }
     }
+
 
 
     // clear page and reconstruct slides using winners array
@@ -322,20 +322,6 @@ function getLocation()
                 // build photo object array
                 buildPhotoObjArray(photos, businessDetails[i].name);
 
-                // // add each photo and business name to it's own object
-                // for (let j = 0; j < lenPhotos; j++) {
-                //     let photo = photos[j].toString().replace(/[\[\]' ]/g, "");
-
-                //     let photoObj = {
-                //         name: businessDetails[i].name,
-                //         nameStripped: businessDetails[i].name.replace(/[" ",';:&*^$!@#()]/g, ""),
-                //         photo: photo,
-                //         views: 0 // keep track of slide views
-                //     }
-
-                //     // push object to array
-                //     photosArray.push(photoObj);
-                // }
             }
 
             // build html page from photosArray
