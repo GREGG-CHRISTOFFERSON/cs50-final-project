@@ -1,0 +1,67 @@
+{% extends "home-layout.html" %}
+
+{% block title %}
+    Portfolio
+{% endblock %}
+
+{% block main %}
+<!--
+    http://getbootstrap.com/docs/4.1/components/carousel/#via-data-attributes
+    Instead of data-slide with prev or next keywords, try making image clickable using
+    data-slide-to to pass a random or programmatically selected slide index to go to on click.
+
+    Todo:
+    Get two slides working side by side with same pictures
+    If picture in slide 1 = slice 2, change slide 1
+    onclick, go to next image in set of winner, remove loser from slide 2, and change slide 2
+    Actually, not sure how this game will work, but we need to write an algorithm that matches up two images
+    on click, keeps track of winner, then places winner on map with business info.
+-->
+<p class="text-left">Compare the images and click the image most appetizing to you.
+              If neither image is appetizing, click the "Skip" button.</p>
+<p class="h6 text-left">Decision Progress</p>
+
+<div class="progress">
+  <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="25%" aria-valuemin="0" aria-valuemax="100">25%</div>
+</div>
+
+
+<div calss="container">
+  <div class="row">
+
+    <div class="col-sm-12 col-md-6">
+       <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+        </div>
+        <a class="carousel-control-prev invisible" href="#carouselExampleControls" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next invisible" href="#carouselExampleControls" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-sm-12 col-md-6">
+       <div id="carouselExampleControls2" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner2">
+        </div>
+        <a class="carousel-control-prev invisible" href="#carouselExampleControls2" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next invisible" href="#carouselExampleControls2" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="sr-only">Next</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<button type="button" class="btn btn-primary btn-lg">Skip >></button>
+
+{% endblock %}
