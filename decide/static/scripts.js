@@ -150,10 +150,104 @@ function getLocation()
         winners = [];
 
         // clear page
-        $("div.carousel-inner").html("");
+        $("div.carousel-inner1").html("");
         $("div.carousel-inner2").html("");
 
         // reconstruct page
+        // build the slides
+        function buildSlides(splitArray, length, groupNumString) {
+            for (let k = 0; k < length; k++) {
+                $("div.carousel-inner" + groupNumString).append(
+                    '<div class="carousel-item">' +
+                      '<img id="' + splitArray[k].nameStripped + k.toString() + '" class="d-block w-100" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' +
+                    '</div>'
+                    );
+
+                // add click listener
+                $("#" + splitArray[k].nameStripped + k).click(function() {
+                    for (let i = 0; i < lenDetails; i++) {
+
+                        // track which image the user clicked on
+                        if (businessDetails[i].name == splitArray[k].name) {
+                            businessDetails[i].wins++;
+                            console.log(businessDetails[i].name + " has " + businessDetails[i].wins);
+
+                            // track number of views of this slide
+                            resultViews++;
+
+                            // push winner to winners array
+                            winners.push(splitArray[k]);
+                        }
+                    }
+
+                    y = resultViews;
+
+                    // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
+                    if (y == x && winners.length > 1) {
+                        // call function passing winners array.
+                        rebuildPage(winners);
+                    }
+
+                    // otherwise, if all slides have been viewed and winners length is 0, set all views to 0 and advance to next slide
+                    else if (y == x && winners.length == 0) {
+                        resultViews = 0;
+                        $(".carousel-control-next").click();
+                    }
+
+                    // otherwise, if length doesn't equal 1 advance to next slide.
+                    else if (winners.length != 1) {
+                        $(".carousel-control-next").click();
+                    }
+
+                    // otherwise post winner and redirect to map in back end
+                    else if (winners.length == 1 && y == x) {
+                        businessDetails.sort(function(a,b) {
+                            return parseFloat(b.wins) - parseFloat(a.wins);
+                        });
+
+                        // check if we have a tie
+                        let index = 0;
+                        while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
+                               businessDetails[index].wins == businessDetails[index + 1].wins) {
+                            console.log("We have a tie!");
+                            console.log(businessDetails[index].name + ": " + businessDetails[index].wins);
+                            console.log(businessDetails[index + 1].name + ": " + businessDetails[index + 1].wins);
+
+                            // build photoArrayObj for each business and add to array
+                            let businessPhotos = businessDetails[index].photos.split(",");
+                            buildPhotoObjArray(businessPhotos, businessDetails[index].name);
+                            businessPhotos = businessDetails[index + 1].photos.split(",");
+                            buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
+
+                            index++;
+                        }
+
+                        console.log(photosArray);
+
+                        // if we have a tie, repeat html building using tied array
+                        if (photosArray.length != 0) {
+
+                            rebuildPage(photosArray);
+                        }
+
+                        // otherwise we must have a winner
+                        // post winner
+                        else {
+                            alert("We have a winner!  " + businessDetails[0].name + "\n" +
+                                  "views: " + y + "\n" +
+                                  "length: " + x + "\n" +
+                                  "winners length: " + winners.length);
+                        }
+                    }
+
+                    else {
+                        $(".carousel-control-next").click();
+                    }
+                });
+            }
+            console.log("SUCCESS!");
+        }
+
         // Split the array into 2 groups
         let result = chunkArray(array, array.length/2);
 
@@ -166,188 +260,13 @@ function getLocation()
         let y;
 
         // build the html for 1st slider on index page
-        for (let k = 0; k < lenResults0; k++) {
-            $("div.carousel-inner").append(
-                '<div class="carousel-item">' +
-                  '<img id="' + result[0][k].nameStripped + k.toString() + '" class="d-block w-100" src="' + result[0][k].photo.toString().replace(/[\[\]' ]/g, "") + '">' +
-                '</div>'
-                );
-
-            // add click listener
-            $("#" + result[0][k].nameStripped + k).click(function() {
-                for (let i = 0; i < lenDetails; i++) {
-
-                    // track which image the user clicked on
-                    if (businessDetails[i].name == result[0][k].name) {
-                        businessDetails[i].wins++;
-                        console.log(businessDetails[i].name + " has " + businessDetails[i].wins);
-
-                        // track number of views of this slide
-                        resultViews++;
-
-                        // push winner to winners array
-                        winners.push(result[0][k]);
-                    }
-                }
-
-                y = resultViews;
-
-                // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
-                if (y == x && winners.length > 1) {
-                    // call function passing winners array.
-                    rebuildPage(winners);
-                }
-
-                // otherwise, if all slides have been viewed and winners length is 0, set all views to 0 and advance to next slide
-                else if (y == x && winners.length == 0) {
-                    resultViews = 0;
-                    $(".carousel-control-next").click();
-                }
-
-                // otherwise, if length doesn't equal 1 advance to next slide.
-                else if (winners.length != 1) {
-                    $(".carousel-control-next").click();
-                }
-
-                // otherwise post winner and redirect to map in back end
-                else if (winners.length == 1 && y == x) {
-                    businessDetails.sort(function(a,b) {
-                        return parseFloat(b.wins) - parseFloat(a.wins);
-                    });
-
-                    // check if we have a tie
-                    let index = 0;
-                    while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
-                           businessDetails[index].wins == businessDetails[index + 1].wins) {
-                        console.log("We have a tie!");
-                        console.log(businessDetails[index].name + ": " + businessDetails[index].wins);
-                        console.log(businessDetails[index + 1].name + ": " + businessDetails[index + 1].wins);
-
-                        // build photoArrayObj for each business and add to array
-                        let businessPhotos = businessDetails[index].photos.split(",");
-                        buildPhotoObjArray(businessPhotos, businessDetails[index].name);
-                        businessPhotos = businessDetails[index + 1].photos.split(",");
-                        buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
-
-                        index++;
-                    }
-
-                    console.log(photosArray);
-
-                    // if we have a tie, repeat html building using tied array
-                    if (photosArray.length != 0) {
-
-                        rebuildPage(photosArray);
-                    }
-
-                    // otherwise we must have a winner
-                    // post winner
-                    else {
-                        alert("We have a winner!  " + businessDetails[0].name + "\n" +
-                              "views: " + y + "\n" +
-                              "length: " + x + "\n" +
-                              "winners length: " + winners.length);
-                    }
-                }
-
-                else {
-                    $(".carousel-control-next").click();
-                }
-            });
-        }
+        buildSlides(result[0], lenResults0, "1");
 
         // empty photosArray
         photosArray = [];
 
         // build the html for the 2nd slider on index page
-        for (let l = 0; l < lenResults1; l++) {
-            $("div.carousel-inner2").append(
-                '<div class="carousel-item">' +
-                  '<img id="' + result[1][l].nameStripped + l.toString() + '" class="d-block w-100" src="' + result[1][l].photo.toString().replace(/[\[\]' ]/g, "") + '">' +
-                '</div>'
-                );
-
-            // add click listener
-            $("#" + result[1][l].nameStripped + l).click(function() {
-                for (let i = 0; i < lenDetails; i++) {
-
-                    // track which image the user clicked on
-                    if (businessDetails[i].name == result[1][l].name) {
-                        businessDetails[i].wins++;
-                        console.log(businessDetails[i].name + " has " + businessDetails[i].wins);
-
-                        // track number of views of this slide
-                        resultViews++;
-
-                        // push winner to winners array
-                        winners.push(result[1][l]);
-                    }
-                }
-
-                y = resultViews;
-
-                // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
-                if (y == x && winners.length > 1) {
-                    // call function passing winners array.
-                    rebuildPage(winners);
-                }
-
-                // otherwise, if all slides have been viewed and winners length is 0, set all views to 0 and advance to next slide
-                else if (y == x && winners.length == 0) {
-                    resultViews = 0;
-                    $(".carousel-control-next").click();
-                }
-
-                // otherwise, if length doesn't equal 1 advance to next slide.
-                else if (winners.length != 1) {
-                        $(".carousel-control-next").click();
-                }
-
-                // otherwise post winner and redirect to map in back end
-                else if (winners.length == 1 && y == x) {
-                    businessDetails.sort(function(a,b) {
-                        return parseFloat(b.wins) - parseFloat(a.wins);
-                    });
-
-                    // check if we have a tie
-                    let index = 0;
-                    while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
-                           businessDetails[index].wins == businessDetails[index + 1].wins) {
-                        console.log("We have a tie!");
-                        console.log(businessDetails[index].name + ": " + businessDetails[index].wins);
-                        console.log(businessDetails[index + 1].name + ": " + businessDetails[index + 1].wins);
-
-                        // build photoArrayObj for each business and add to array
-                        let businessPhotos = businessDetails[index].photos.split(",");
-                        let photosArray = buildPhotoObjArray(businessPhotos, businessDetails[index].name);
-                        businessPhotos = businessDetails[index + 1].photos.split(",");
-                        let photosArray2 = buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
-
-                        index++;
-                    }
-
-                    console.log(photosArray);
-
-                    // if we have a tie, repeat html building using tied array
-                    if (photosArray.length != 0) {
-
-                        rebuildPage(photosArray);
-                    }
-
-                    // otherwise we must have a winner
-                    // post winner
-                    else {
-                        alert("We have a winner!  " + businessDetails[0].name + "\n" +
-                              "views: " + y + "\n" +
-                              "length: " + x + "\n" +
-                              "winners length: " + winners.length);
-                    }
-                }
-                else {
-                    $(".carousel-control-next").click();
-                }
-            });
-        }
+        buildSlides(result[1], lenResults1, "2");
 
         // activate slides
         $(".carousel-item:first-child").addClass("active");
