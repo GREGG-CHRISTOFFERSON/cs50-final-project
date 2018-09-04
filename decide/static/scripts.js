@@ -133,10 +133,26 @@ function getLocation()
                 name: businessName,
                 nameStripped: businessName.replace(/[" ",';:&*^$!@#()]/g, ""),
                 photo: photo,
-            }
+            };
 
             // push object to array
             photosArray.push(photoObj);
+
+        }
+    }
+
+
+    // check if images are the same and if true advance one slides
+    function checkImages(imageSelector) {
+        let image1 = $("." + imageSelector + "1").attr("src");
+        let image2 = $("." + imageSelector + "2").attr("src");
+        console.log("Image 1: " + image1);
+        console.log("Image 2: " + image2);
+
+        while (image1 == image2 && image1 != undefined && image2 != undefined) {
+
+            // advance to next slide
+            $(".carousel-control-next").click();
 
         }
     }
@@ -153,13 +169,86 @@ function getLocation()
         $("div.carousel-inner1").html("");
         $("div.carousel-inner2").html("");
 
+
+
+        // check conditions for rebuilding slides
+        function checkRebuildConditions() {
+
+            // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
+            if (y == x && winners.length > 1) {
+                // call function passing winners array.
+                rebuildPage(winners);
+            }
+
+            // otherwise, if all slides have been viewed and winners length is 0, set all views to 0 and advance to next slide
+            else if (y == x && winners.length == 0) {
+                resultViews = 0;
+                $(".carousel-control-next").click();
+            }
+
+            // otherwise, if length doesn't equal 1 advance to next slide.
+            else if (winners.length != 1) {
+                $(".carousel-control-next").click();
+            }
+
+            // otherwise post winner and redirect to map in back end
+            else if (winners.length == 1 && y == x) {
+                businessDetails.sort(function(a,b) {
+                    return parseFloat(b.wins) - parseFloat(a.wins);
+                });
+
+                // check if we have a tie
+                let index = 0;
+                while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
+                       businessDetails[index].wins == businessDetails[index + 1].wins) {
+                    console.log("We have a tie!");
+                    console.log(businessDetails[index].name + ": " + businessDetails[index].wins);
+                    console.log(businessDetails[index + 1].name + ": " + businessDetails[index + 1].wins);
+
+                    // build photoArrayObj for each business and add to array
+                    let businessPhotos = businessDetails[index].photos.split(",");
+                    buildPhotoObjArray(businessPhotos, businessDetails[index].name);
+                    businessPhotos = businessDetails[index + 1].photos.split(",");
+                    buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
+
+                    index++;
+                }
+
+                console.log(photosArray);
+
+                // if we have a tie, repeat html building using tied array
+                if (photosArray.length != 0) {
+
+                    rebuildPage(photosArray);
+                }
+
+                // otherwise we must have a winner
+                // post winner
+                else {
+                    alert("We have a winner!  " + businessDetails[0].name + "\n" +
+                          "views: " + y + "\n" +
+                          "length: " + x + "\n" +
+                          "winners length: " + winners.length);
+                }
+            }
+
+            else {
+
+                // advance to next slide
+                $(".carousel-control-next").click();
+            }
+        }
+
+
+
         // reconstruct page
         // build the slides
         function buildSlides(splitArray, length, groupNumString) {
             for (let k = 0; k < length; k++) {
                 $("div.carousel-inner" + groupNumString).append(
                     '<div class="carousel-item">' +
-                      '<img id="' + splitArray[k].nameStripped + k.toString() + '" class="d-block w-100" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' +
+                      '<img id="' + splitArray[k].nameStripped + k.toString() + '" class="d-block w-100 ' +
+                      k.toString() + groupNumString + '" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' + '<p>' + splitArray[k].name + '</p>' +
                     '</div>'
                     );
 
@@ -171,6 +260,9 @@ function getLocation()
                         if (businessDetails[i].name == splitArray[k].name) {
                             businessDetails[i].wins++;
                             console.log(businessDetails[i].name + " has " + businessDetails[i].wins);
+                            console.log("Views: " + resultViews);
+                            imageSelector = k + 1;
+                            checkImages(imageSelector.toString());
 
                             // track number of views of this slide
                             resultViews++;
@@ -181,71 +273,18 @@ function getLocation()
                     }
 
                     y = resultViews;
+                    console.log("views: " + resultViews);
+                    console.log("x: " + x);
+                    console.log("y: " + y);
+                    console.log("winners length: " + winners.length);
 
-                    // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
-                    if (y == x && winners.length > 1) {
-                        // call function passing winners array.
-                        rebuildPage(winners);
-                    }
+                    checkRebuildConditions();
 
-                    // otherwise, if all slides have been viewed and winners length is 0, set all views to 0 and advance to next slide
-                    else if (y == x && winners.length == 0) {
-                        resultViews = 0;
-                        $(".carousel-control-next").click();
-                    }
-
-                    // otherwise, if length doesn't equal 1 advance to next slide.
-                    else if (winners.length != 1) {
-                        $(".carousel-control-next").click();
-                    }
-
-                    // otherwise post winner and redirect to map in back end
-                    else if (winners.length == 1 && y == x) {
-                        businessDetails.sort(function(a,b) {
-                            return parseFloat(b.wins) - parseFloat(a.wins);
-                        });
-
-                        // check if we have a tie
-                        let index = 0;
-                        while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
-                               businessDetails[index].wins == businessDetails[index + 1].wins) {
-                            console.log("We have a tie!");
-                            console.log(businessDetails[index].name + ": " + businessDetails[index].wins);
-                            console.log(businessDetails[index + 1].name + ": " + businessDetails[index + 1].wins);
-
-                            // build photoArrayObj for each business and add to array
-                            let businessPhotos = businessDetails[index].photos.split(",");
-                            buildPhotoObjArray(businessPhotos, businessDetails[index].name);
-                            businessPhotos = businessDetails[index + 1].photos.split(",");
-                            buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
-
-                            index++;
-                        }
-
-                        console.log(photosArray);
-
-                        // if we have a tie, repeat html building using tied array
-                        if (photosArray.length != 0) {
-
-                            rebuildPage(photosArray);
-                        }
-
-                        // otherwise we must have a winner
-                        // post winner
-                        else {
-                            alert("We have a winner!  " + businessDetails[0].name + "\n" +
-                                  "views: " + y + "\n" +
-                                  "length: " + x + "\n" +
-                                  "winners length: " + winners.length);
-                        }
-                    }
-
-                    else {
-                        $(".carousel-control-next").click();
-                    }
                 });
             }
-            console.log("SUCCESS!");
+
+            // check for duplicate images
+            checkImages(0);
         }
 
         // Split the array into 2 groups
@@ -276,9 +315,13 @@ function getLocation()
 
             // track slide views
             resultViews++;
+            y = resultViews;
+            console.log("views: " + resultViews);
+            console.log("x: " + x);
+            console.log("y: " + y);
+            console.log("winners length: " + winners.length);
 
-            // advance to next slide
-            $(".carousel-control-next").click();
+            checkRebuildConditions();
         });
     }
 
