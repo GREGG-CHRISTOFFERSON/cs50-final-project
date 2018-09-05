@@ -121,6 +121,7 @@ function getLocation()
     let lenDetails;
     let businessDetails;
     let photosArray = [];
+    let imageSelector = 1;
 
     function buildPhotoObjArray(businessPhotos, businessName) {
         let lenPhotos = businessPhotos.length;
@@ -149,11 +150,15 @@ function getLocation()
         console.log("Image 1: " + image1);
         console.log("Image 2: " + image2);
 
-        while (image1 == image2 && image1 != undefined && image2 != undefined) {
+        if (image1 == image2 && image1 != undefined && image2 != undefined) {
+            alert("We have matching pictures!");
 
             // advance to next slide
             $(".carousel-control-next").click();
 
+        }
+        else {
+            console.log("images are different");
         }
     }
 
@@ -165,6 +170,7 @@ function getLocation()
         // empty winners array
         winners = [];
 
+
         // clear page
         $("div.carousel-inner1").html("");
         $("div.carousel-inner2").html("");
@@ -172,7 +178,7 @@ function getLocation()
 
 
         // check conditions for rebuilding slides
-        function checkRebuildConditions() {
+        function checkRebuildConditions(imageSelector) {
 
             // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
             if (y == x && winners.length > 1) {
@@ -184,11 +190,13 @@ function getLocation()
             else if (y == x && winners.length == 0) {
                 resultViews = 0;
                 $(".carousel-control-next").click();
+                checkImages(imageSelector);
             }
 
             // otherwise, if length doesn't equal 1 advance to next slide.
             else if (winners.length != 1) {
                 $(".carousel-control-next").click();
+                checkImages(imageSelector);
             }
 
             // otherwise post winner and redirect to map in back end
@@ -236,6 +244,7 @@ function getLocation()
 
                 // advance to next slide
                 $(".carousel-control-next").click();
+                checkImages(imageSelector);
             }
         }
 
@@ -252,7 +261,7 @@ function getLocation()
                     '</div>'
                     );
 
-                // add click listener
+                // add click listener to images
                 $("#" + splitArray[k].nameStripped + k).click(function() {
                     for (let i = 0; i < lenDetails; i++) {
 
@@ -262,7 +271,8 @@ function getLocation()
                             console.log(businessDetails[i].name + " has " + businessDetails[i].wins);
                             console.log("Views: " + resultViews);
                             imageSelector = k + 1;
-                            checkImages(imageSelector.toString());
+                            console.log("imageSelector: " + imageSelector);
+                            // checkImages(imageSelector.toString());
 
                             // track number of views of this slide
                             resultViews++;
@@ -278,7 +288,8 @@ function getLocation()
                     console.log("y: " + y);
                     console.log("winners length: " + winners.length);
 
-                    checkRebuildConditions();
+                    checkRebuildConditions(imageSelector.toString());
+                    imageSelector++;
 
                 });
             }
@@ -321,7 +332,8 @@ function getLocation()
             console.log("y: " + y);
             console.log("winners length: " + winners.length);
 
-            checkRebuildConditions();
+            checkRebuildConditions(imageSelector.toString());
+            imageSelector++;
         });
     }
 
