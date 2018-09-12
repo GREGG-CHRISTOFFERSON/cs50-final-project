@@ -59,6 +59,8 @@ def lookup_details(str_location, location_businesses):
 
     str_location = str_location
 
+    eprint("Looking up business details for location")
+
     # for id in location_businesses, look up business details from database
     for business in location_businesses:
 

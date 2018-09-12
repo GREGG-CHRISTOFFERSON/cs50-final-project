@@ -87,6 +87,7 @@ def location():
 
     # convert location dictionary to string
     str_location = str(location)
+    eprint("str_location = " + str_location)
 
     # query database for location
     location_businesses = db.execute("SELECT * FROM location_businesses WHERE location = :location", location=str_location)
@@ -107,6 +108,8 @@ def location():
             return ("", 204)
 
         else:
+
+            eprint("LOOKING UP ON YELP????")
 
             # lookup location details and return results to the front end
             business_details = lookup_details(str_location, location_businesses)

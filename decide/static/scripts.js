@@ -1,49 +1,37 @@
-// Google Map
-let map;
-
-// Markers for map
-let markers = [];
-
-// Info window
-// let info = new google.maps.InfoWindow;
-
-// Open Info window
-let prev_infoWindow = false;
-
-
 // Execute when the DOM is fully loaded
 $(document).ready(function() {
 
-    // get location
-    getLocation();
-
+    // load the page
+    loadPage();
 
 });
 
-// set maps center
-let center;
+
 
 // track winners
 let winners = [];
 
 
-// Get users position
-function getLocation()
-{
-    var options = {
-      enableHighAccuracy: true,
-      maximumAge: 0
-    };
 
-    let lat;
-    let long;
+// check for odd numbers
+function isOdd(num) {
+    return num % 2;
+}
+
+
+
+// Get users position
+function loadPage()
+{
+
+    let lat; // latitude
+    let long; // longitude
     let location;
 
 
 
     // post location to server
     function post(location) {
-        console.log(location);
         $.ajax("/location", {
             data: location,
             contentType : 'application/json',
@@ -51,31 +39,6 @@ function getLocation()
         });
     }
 
-
-
-    // user allowed geolocation
-    function success(pos) {
-      var crd = pos.coords;
-
-      lat = crd.latitude.toFixed(4);
-      long = crd.longitude.toFixed(4);
-
-      console.log('Your current position is:');
-      console.log(`Latitude : ${crd.latitude}`);
-      console.log(`Longitude: ${crd.longitude}`);
-      console.log(`More or less ${crd.accuracy} meters.`);
-      location = { "latitude": lat, "longitude": long };
-      location = JSON.stringify(location);
-      post(location);
-    }
-
-
-
-    // user denied geolocation
-    function error(err) {
-      console.warn(`ERROR(${err.code}): ${err.message}`);
-      console.log("Using IP Address for approximate location")
-    }
 
 
     /**
@@ -117,12 +80,19 @@ function getLocation()
     }
 
 
-
+    // declare global variables
     let lenDetails;
     let businessDetails;
     let photosArray = [];
     let imageSelector = 1;
+    let tie = false;
+    let tieCount = 0;
+    let x;
+    let y = 0;
 
+
+
+    // create an object for every photo
     function buildPhotoObjArray(businessPhotos, businessName) {
         let lenPhotos = businessPhotos.length;
 
@@ -132,7 +102,6 @@ function getLocation()
 
             let photoObj = {
                 name: businessName,
-                nameStripped: businessName.replace(/[" ",';:&*^$!@#()]/g, ""),
                 photo: photo,
             };
 
@@ -143,22 +112,109 @@ function getLocation()
     }
 
 
-    // check if images are the same and if true advance one slides
-    function checkImages(imageSelector) {
-        let image1 = $("." + imageSelector + "1").attr("src");
-        let image2 = $("." + imageSelector + "2").attr("src");
-        console.log("Image 1: " + image1);
-        console.log("Image 2: " + image2);
 
-        if (image1 == image2 && image1 != undefined && image2 != undefined) {
-            alert("We have matching pictures!");
+    // check conditions for rebuilding slides
+    function checkRebuildConditions(imageSelector) {
+
+        // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
+        if (y == x && winners.length > 1) {
+
+            // call function passing winners array.
+            rebuildPage(winners);
+        }
+
+        // otherwise, if all slides have been viewed and winners length is 0 user didn't choose any images. Start over
+        else if (y == x && winners.length == 0) {
+            imageSelector = 1;
+            rebuildPage(photosArray);
+        }
+
+        // otherwise check for tie or post winner
+        else if (winners.length == 1 && x == y) {
+            // sort businessDetails by number of wins
+            businessDetails.sort(function(a,b) {
+                return parseFloat(b.wins) - parseFloat(a.wins);
+            });
+
+            // check if we have a tie
+            let index = 0;
+            let tied = new Set();
+            photosArray = [];
+
+            // while two businesses have same number of wins, add businesses to tied set
+            while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
+                   businessDetails[index].wins == businessDetails[index + 1].wins) {
+                tie = true;
+                tied.add(businessDetails[index]);
+                tied.add(businessDetails[index + 1]);
+
+                // build photoArrayObj for each business and add to array
+                let businessPhotos = businessDetails[index].photos.split(",");
+                buildPhotoObjArray(businessPhotos, businessDetails[index].name);
+                businessPhotos = businessDetails[index + 1].photos.split(",");
+                buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
+                index++;
+
+                // convert tied set to array
+                tied = Array.from(tied);
+
+                // if same businesses have tied more than once, post all tied businesses as winners
+                if (tie == true && tieCount > 0) {
+                    let tieLength = tied.length;
+                    for (let s = 0; s < tieLength; s++) {
+
+                        // post winner
+                        console.log("Winner: " + tie[s].name);
+                    }
+                }
+            }
+
+            // track if we have tied more than once
+            if (tie == true) {
+                tieCount++;
+            }
+
+            // if we have a tie, repeat html building using tied array if this is the first time tieing
+            if (tied.length != 0 && tie == true) {
+                tie = false;
+                imageSelector = 1;
+                rebuildPage(photosArray);
+            }
+
+            // otherwise we must have a winner
+            else {
+
+                // post winner
+                alert("Line 223 We have a winner!  " + businessDetails[0].name + "\n" +
+                      "views: " + y + "\n" +
+                      "length: " + x + "\n" +
+                      "winners length: " + winners.length);
+            }
+
+            // convert tied array back to set
+            tied = new Set();
+        }
+
+        else {
 
             // advance to next slide
             $(".carousel-control-next").click();
-
+            checkImages(imageSelector);
         }
-        else {
-            console.log("images are different");
+    }
+
+
+
+    // check if images are the same and if true advance one slides
+    function checkImages(selector) {
+        let image1 = $("." + selector + "1").attr("src");
+        let image2 = $("." + selector + "2").attr("src");
+
+        if (image1 == image2 && image1 != undefined && image2 != undefined) {
+
+            // advance to next slide
+            checkRebuildConditions(selector.toString());
+            imageSelector++;
         }
     }
 
@@ -170,109 +226,60 @@ function getLocation()
         // empty winners array
         winners = [];
 
-
         // clear page
         $("div.carousel-inner1").html("");
         $("div.carousel-inner2").html("");
 
 
 
-        // check conditions for rebuilding slides
-        function checkRebuildConditions(imageSelector) {
-
-            // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
-            if (y == x && winners.length > 1) {
-                // call function passing winners array.
-                rebuildPage(winners);
-            }
-
-            // otherwise, if all slides have been viewed and winners length is 0, set all views to 0 and advance to next slide
-            else if (y == x && winners.length == 0) {
-                resultViews = 0;
-                $(".carousel-control-next").click();
-                checkImages(imageSelector);
-            }
-
-            // otherwise, if length doesn't equal 1 advance to next slide.
-            else if (winners.length != 1) {
-                $(".carousel-control-next").click();
-                checkImages(imageSelector);
-            }
-
-            // otherwise post winner and redirect to map in back end
-            else if (winners.length == 1 && y == x) {
-                businessDetails.sort(function(a,b) {
-                    return parseFloat(b.wins) - parseFloat(a.wins);
-                });
-
-                // check if we have a tie
-                let index = 0;
-                while (businessDetails[index].wins != null && businessDetails[index + 1].wins != null &&
-                       businessDetails[index].wins == businessDetails[index + 1].wins) {
-                    console.log("We have a tie!");
-                    console.log(businessDetails[index].name + ": " + businessDetails[index].wins);
-                    console.log(businessDetails[index + 1].name + ": " + businessDetails[index + 1].wins);
-
-                    // build photoArrayObj for each business and add to array
-                    let businessPhotos = businessDetails[index].photos.split(",");
-                    buildPhotoObjArray(businessPhotos, businessDetails[index].name);
-                    businessPhotos = businessDetails[index + 1].photos.split(",");
-                    buildPhotoObjArray(businessPhotos, businessDetails[index + 1].name);
-
-                    index++;
-                }
-
-                console.log(photosArray);
-
-                // if we have a tie, repeat html building using tied array
-                if (photosArray.length != 0) {
-
-                    rebuildPage(photosArray);
-                }
-
-                // otherwise we must have a winner
-                // post winner
-                else {
-                    alert("We have a winner!  " + businessDetails[0].name + "\n" +
-                          "views: " + y + "\n" +
-                          "length: " + x + "\n" +
-                          "winners length: " + winners.length);
-                }
-            }
-
-            else {
-
-                // advance to next slide
-                $(".carousel-control-next").click();
-                checkImages(imageSelector);
-            }
-        }
-
-
-
-        // reconstruct page
         // build the slides
         function buildSlides(splitArray, length, groupNumString) {
+
+            // save generated ids
+            let lastID = [];
+            let imageID;
+
+
+
+            // generate random unique id
+            function generateID() {
+                imageID = Math.floor(Math.random()*1000) + 1;
+                lastID.push(imageID);
+            }
+
+
+            // iterate over the splitArray and build slides using objects in array
             for (let k = 0; k < length; k++) {
+
+                generateID();
+
+                // ensure we have a unique id
+                lastID.sort(function(a,b) {
+                    return parseFloat(a.wins) - parseFloat(b.wins);
+                });
+
+                while (lastID[0] == lastID[1]) {
+                    generateID();
+                }
+
+                // inject the html for the slides
                 $("div.carousel-inner" + groupNumString).append(
                     '<div class="carousel-item">' +
-                      '<img id="' + splitArray[k].nameStripped + k.toString() + '" class="d-block w-100 ' +
+                      '<img id="' + imageID + '" class="d-block w-100 ' +
                       k.toString() + groupNumString + '" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' + '<p>' + splitArray[k].name + '</p>' +
                     '</div>'
                     );
 
                 // add click listener to images
-                $("#" + splitArray[k].nameStripped + k).click(function() {
+                $("#" + imageID).click(function() {
                     for (let i = 0; i < lenDetails; i++) {
 
                         // track which image the user clicked on
                         if (businessDetails[i].name == splitArray[k].name) {
                             businessDetails[i].wins++;
-                            console.log(businessDetails[i].name + " has " + businessDetails[i].wins);
-                            console.log("Views: " + resultViews);
+
+                            // define the selector for the images we will check later
                             imageSelector = k + 1;
-                            console.log("imageSelector: " + imageSelector);
-                            // checkImages(imageSelector.toString());
 
                             // track number of views of this slide
                             resultViews++;
@@ -283,37 +290,66 @@ function getLocation()
                     }
 
                     y = resultViews;
-                    console.log("views: " + resultViews);
-                    console.log("x: " + x);
-                    console.log("y: " + y);
-                    console.log("winners length: " + winners.length);
 
+                    // check conditions for rebuilding the page
                     checkRebuildConditions(imageSelector.toString());
                     imageSelector++;
 
                 });
             }
 
-            // check for duplicate images
+            // check for duplicate images first time after rebuilding page with an array of objects
             checkImages(0);
         }
 
         // Split the array into 2 groups
         let result = chunkArray(array, array.length/2);
-
         let lenResults0 = result[0].length;
         let lenResults1 = result[1].length;
 
+        // reset views to 0
         let resultViews = 0;
+        y = 0;
 
-        let x = Math.round((lenResults0 + lenResults1) / 2);
-        let y;
+        // check for odd number of slides
+        x = Math.round((lenResults0 + lenResults1) / 2);
+        let slideIndex0 = 0;
+        let slideIndex1 = 0;
+        let res = isOdd(x);
+
+
+        // while we have an odd number of slides, x doesn't equal one and array length isn't 3
+        while (res == 1 && x != 1 || lenResults0 + lenResults1 == 3) {
+
+            // if 1st array is smaller than 2nd array
+            if (lenResults0 <= lenResults1) {
+
+                // add another slide to the first array
+                result[0].push(result[0][slideIndex0]);
+                lenResults0 = result[0].length;
+                slideIndex0++;
+            }
+
+            // otherwise, if 2nd array is smaller than 1st array
+            else if (lenResults1 <= lenResults0) {
+
+                // add another slide to the 2nd array
+                result[1].push(result[1][slideIndex1]);
+                lenResults1 = result[1].length;
+                slideIndex1++;
+            }
+
+            // check again for odd number of slides
+            x = Math.round((lenResults0 + lenResults1) / 2);
+            res = isOdd(x);
+            let res2 = isOdd(lenResults0 + lenResults1);
+            if (res2 == 1) {
+                res = res2;
+            }
+        }
 
         // build the html for 1st slider on index page
         buildSlides(result[0], lenResults0, "1");
-
-        // empty photosArray
-        photosArray = [];
 
         // build the html for the 2nd slider on index page
         buildSlides(result[1], lenResults1, "2");
@@ -322,16 +358,19 @@ function getLocation()
         $(".carousel-item:first-child").addClass("active");
 
         // add click listener to skip button
-        $("button").click(function() {
+        $("button").unbind("click").click(function() {
 
             // track slide views
             resultViews++;
-            y = resultViews;
-            console.log("views: " + resultViews);
-            console.log("x: " + x);
-            console.log("y: " + y);
-            console.log("winners length: " + winners.length);
 
+            // if result views is <= x, y = resultViews.
+            if (resultViews <= x) {
+                y = resultViews;
+            }
+
+            imageSelector = y;
+
+            // check conditions for rebuilding page
             checkRebuildConditions(imageSelector.toString());
             imageSelector++;
         });
@@ -339,24 +378,19 @@ function getLocation()
 
 
 
-    // load businesses from users location
+    // load businesses from users location.
+    // get location from ip address
     $.getJSON("https://api.ipify.org/?format=json", function(e) {
         let ip = e.ip;
         $.getJSON('https://json.geoiplookup.io/' + ip, function(data) {
             lat = data.latitude;
             long = data.longitude;
-            console.log('Your current position is approximately:');
-            console.log(`Latitude : ${lat}`);
-            console.log(`Longitude: ${long}`);
             location = { "latitude": lat, "longitude": long };
-            center = {lat: Number(`${lat}`), lng: Number(`${long}`)};
 
             // post location
             location = JSON.stringify(location);
             post(location);
 
-            // empty photosArray
-            photosArray = [];
 
             // get location businesses
             $.getJSON("/businesses?location=" + location, function(data) {
@@ -390,7 +424,4 @@ function getLocation()
     $('.carousel').carousel({
         interval: false
     });
-
-    // promt user to allow for geolocation
-    navigator.geolocation.getCurrentPosition(success, error, options);
 }
