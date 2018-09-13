@@ -45,8 +45,14 @@ def after_request(response):
 
 @app.route("/")
 def index():
-    """Render map"""
+    """Render index"""
     return render_template("index.html")
+
+
+@app.route("/map")
+def map():
+    """Render map"""
+    return render_template("map.html")
 
 
 @app.route("/articles", methods=["GET", "POST"])
@@ -153,6 +159,57 @@ def location():
 
                 # The server successfully processed the request and is not returning any content
                 return ("", 204)
+
+
+
+@app.route("/winner", methods=["POST"])
+def winner():
+    """Process the winner(s) business data and render map with business(es) info"""
+
+    # get the data
+    winner = request.get_json()
+    winner_length = len(winner)
+    eprint("winner(s) length: " + str(winner_length))
+    pprint(winner)
+
+    # get the category
+    category = ast.literal_eval(winner[0]["categories"])[0]["title"]
+    eprint(category)
+
+    # get the latitude
+    lat = ast.literal_eval(winner[0]["coordinates"])["latitude"]
+    eprint(lat)
+
+    # get the longitude
+    lon = ast.literal_eval(winner[0]["coordinates"])["longitude"]
+    eprint(lon)
+
+    # get the name
+    name = winner[0]["name"]
+    eprint(name)
+
+    # get the phone number
+    phone = winner[0]["phone"]
+    eprint(phone)
+
+    # get the price
+    price = winner[0]["price"]
+    eprint(price)
+
+    # get the rating
+    rating = winner[0]["rating"]
+    eprint(rating)
+
+    # get the review count
+    review_count = winner[0]["review_count"]
+    eprint(review_count)
+
+    # get the url
+    url = winner[0]["url"]
+    eprint(url)
+
+
+    return ("", 204);
 
 
 

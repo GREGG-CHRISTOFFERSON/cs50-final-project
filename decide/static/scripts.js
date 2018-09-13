@@ -30,10 +30,10 @@ function loadPage()
 
 
 
-    // post location to server
-    function post(location) {
-        $.ajax("/location", {
-            data: location,
+    // post to server
+    function post(url, data) {
+        $.ajax(url, {
+            data: data,
             contentType : 'application/json',
             type: 'POST'
         });
@@ -160,12 +160,9 @@ function loadPage()
 
                 // if same businesses have tied more than once, post all tied businesses as winners
                 if (tie == true && tieCount > 0) {
-                    let tieLength = tied.length;
-                    for (let s = 0; s < tieLength; s++) {
-
-                        // post winner
-                        console.log("Winner: " + tie[s].name);
-                    }
+                    alert("we have a tie!");
+                    let winners = JSON.stringify(tied);
+                    post("/winner", winners);
                 }
             }
 
@@ -185,10 +182,14 @@ function loadPage()
             else {
 
                 // post winner
-                alert("Line 223 We have a winner!  " + businessDetails[0].name + "\n" +
+                alert("We have a winner!  " + businessDetails[0].name + "\n" +
                       "views: " + y + "\n" +
                       "length: " + x + "\n" +
                       "winners length: " + winners.length);
+                let winner = [];
+                winner.push(businessDetails[0]);
+                winner = JSON.stringify(winner);
+                post("/winner", winner);
             }
 
             // convert tied array back to set
@@ -389,7 +390,7 @@ function loadPage()
 
             // post location
             location = JSON.stringify(location);
-            post(location);
+            post("/location", location);
 
 
             // get location businesses
