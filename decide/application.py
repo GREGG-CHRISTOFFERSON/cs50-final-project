@@ -1,3 +1,4 @@
+# This app helps undecisive people choose a place to eat nearby
 import ast
 import datetime
 import json
@@ -43,45 +44,12 @@ def after_request(response):
     return response
 
 
+
 @app.route("/")
 def index():
     """Render index"""
     return render_template("index.html")
 
-
-@app.route("/map")
-def map():
-    """Render map"""
-    return render_template("map.html")
-
-
-@app.route("/articles", methods=["GET", "POST"])
-def articles():
-    """Look up articles for geo"""
-
-    # Ensure parameters are present
-    geo = request.args.get("geo")
-    if not geo:
-        raise RuntimeError("missing geo")
-
-    # Look up articles for geo
-    articles = lookup(geo)
-    return jsonify(articles)
-
-
-@app.route("/search", methods=["GET", "POST"])
-def search():
-    """Search for places that match query"""
-
-    # Ensure parameters are present
-    q = request.args.get("q") + "*"
-    if not q:
-        raise RuntimeError("missing q")
-
-    # Look up places for q
-    places = db.execute("SELECT * FROM v_places WHERE v_places MATCH :q", q=q)
-
-    return jsonify(places)
 
 
 @app.route("/location", methods=["POST"])
@@ -162,57 +130,6 @@ def location():
 
 
 
-@app.route("/winner", methods=["POST"])
-def winner():
-    """Process the winner(s) business data and render map with business(es) info"""
-
-    # get the data
-    winner = request.get_json()
-    winner_length = len(winner)
-    eprint("winner(s) length: " + str(winner_length))
-    pprint(winner)
-
-    # get the category
-    category = ast.literal_eval(winner[0]["categories"])[0]["title"]
-    eprint(category)
-
-    # get the latitude
-    lat = ast.literal_eval(winner[0]["coordinates"])["latitude"]
-    eprint(lat)
-
-    # get the longitude
-    lon = ast.literal_eval(winner[0]["coordinates"])["longitude"]
-    eprint(lon)
-
-    # get the name
-    name = winner[0]["name"]
-    eprint(name)
-
-    # get the phone number
-    phone = winner[0]["phone"]
-    eprint(phone)
-
-    # get the price
-    price = winner[0]["price"]
-    eprint(price)
-
-    # get the rating
-    rating = winner[0]["rating"]
-    eprint(rating)
-
-    # get the review count
-    review_count = winner[0]["review_count"]
-    eprint(review_count)
-
-    # get the url
-    url = winner[0]["url"]
-    eprint(url)
-
-
-    return ("", 204);
-
-
-
 @app.route("/businesses", methods=["GET"])
 def businesses():
     """Get business details for location"""
@@ -240,51 +157,3 @@ def businesses():
 
         # we need location businesses
         raise RuntimeError("missing location businesses")
-
-
-
-@app.route("/update")
-def update():
-    """Find up to 10 places within view"""
-
-    # Ensure parameters are present
-    if not request.args.get("sw"):
-        raise RuntimeError("missing sw")
-    if not request.args.get("ne"):
-        raise RuntimeError("missing ne")
-
-    # Ensure parameters are in lat,lng format
-    if not re.search("^-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?$", request.args.get("sw")):
-        raise RuntimeError("invalid sw")
-    if not re.search("^-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?$", request.args.get("ne")):
-        raise RuntimeError("invalid ne")
-
-    # Explode southwest corner into two variables
-    sw_lat, sw_lng = map(float, request.args.get("sw").split(","))
-
-    # Explode northeast corner into two variables
-    ne_lat, ne_lng = map(float, request.args.get("ne").split(","))
-
-    # Find 10 cities within view, pseudorandomly chosen if more within view
-    if sw_lng <= ne_lng:
-
-        # Doesn't cross the antimeridian
-        rows = db.execute("""SELECT * FROM places
-                          WHERE :sw_lat <= latitude AND latitude <= :ne_lat AND (:sw_lng <= longitude AND longitude <= :ne_lng)
-                          GROUP BY country_code, place_name, admin_code1
-                          ORDER BY RANDOM()
-                          LIMIT 10""",
-                          sw_lat=sw_lat, ne_lat=ne_lat, sw_lng=sw_lng, ne_lng=ne_lng)
-
-    else:
-
-        # Crosses the antimeridian
-        rows = db.execute("""SELECT * FROM places
-                          WHERE :sw_lat <= latitude AND latitude <= :ne_lat AND (:sw_lng <= longitude OR longitude <= :ne_lng)
-                          GROUP BY country_code, place_name, admin_code1
-                          ORDER BY RANDOM()
-                          LIMIT 10""",
-                          sw_lat=sw_lat, ne_lat=ne_lat, sw_lng=sw_lng, ne_lng=ne_lng)
-
-    # Output places as JSON
-    return jsonify(rows)

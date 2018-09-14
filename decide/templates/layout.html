@@ -1,9 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
+
     <head>
-        <meta charset="utf-8">
-        <title>{% block title %}{% endblock %}</title>
-        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 
         <!-- documentation at http://getbootstrap.com/docs/4.0/, alternative themes at https://bootswatch.com/4-alpha/ -->
         <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet"/>
@@ -22,13 +25,24 @@
         crossorigin=""></script>
 
         <!-- custom stylesheets -->
-        <link rel="stylesheet" href="/static/map-styles.css"/>
+        <link href="/static/styles.css" rel="stylesheet"/>
 
-        <!-- custom scripts -->
-        <script src="/static/map-scripts.js"></script>
+        <!-- app's own JavaScript -->
+        <script src="/static/scripts.js"></script>
+
+        <title>Decide Guide</title>
+
     </head>
-<body>
-    {% block main %}
-    {% endblock %}
-</body>
+
+    <body>
+
+        <nav class="navbar navbar-expand-md navbar-light bg-light border">
+            <a class="navbar-brand" href="/"><span class="blue">Decide</span><span class="red">Guide</span></a>
+        </nav>
+        <main class="container p-5">
+            {% block main %}{% endblock %}
+        </main>
+
+    </body>
+
 </html>

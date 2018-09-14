@@ -1,3 +1,18 @@
+// remember center latitude & longitude for map
+let centerLat;
+let centerLong;
+
+// remember winning businesses details
+let winnerCategory;
+let winnerName;
+let winnerPhone;
+let winnerPrice;
+let winnerRating;
+let winnerReviewCount;
+let winnerUrl;
+
+
+
 // Execute when the DOM is fully loaded
 $(document).ready(function() {
 
@@ -7,9 +22,52 @@ $(document).ready(function() {
 });
 
 
-
 // track winners
 let winners = [];
+
+
+
+// load map and markers
+function loadMap(lat, long) {
+
+    // replace html with map
+    // clear page, fade to
+    $("body").html("");
+
+    $("body").append('<div id="mapid"></div>');
+
+    let winnerDetails = "<b>Category: </b>" + winnerCategory.toString() + "<br>" +
+                        "<b>Name: </b>" + winnerName + "<br>" +
+                        "<b>Phone: </b>" + winnerPhone + "<br>" +
+                        "<b>Price: </b>" + winnerPrice + "<br>" +
+                        "<b>Rating: </b>" + winnerRating + "<br>" +
+                        "<b>Review Count: </b>" + winnerReviewCount + "<br>" +
+                        "<b><a href='" + winnerUrl + "' target='_blank'>View Business on Yelp</a>";
+
+
+    // initialize map and set it's center view
+    // documentation at https://leafletjs.com/examples/quick-start/
+    // check if we are on the right page
+    if ($("#mapid").length) {
+        let mymap = L.map('mapid').setView([lat, long], 15);
+
+        // add tile layer to map
+        //https://www.mapbox.com/
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoiZ2NocmlzdG8yNyIsImEiOiJjamx6dDhrbGcwaHYyM3ZwYXBraWx4aGd4In0.FvDvvPy5xE59eni6x_xJ5Q'
+        }).addTo(mymap);
+
+        // add marker
+        let marker = L.marker([lat, long]).addTo(mymap);
+
+        // add popup
+        marker.bindPopup(winnerDetails).openPopup();
+
+    }
+}
 
 
 
@@ -163,6 +221,12 @@ function loadPage()
                     alert("we have a tie!");
                     let winners = JSON.stringify(tied);
                     post("/winner", winners);
+
+                    // for each winner, set latitude and longitude for markers
+                    alert("Developer hasn't added support for a tie so this app isn't going to work now.  Sorry!  I thought this would never happen! :-(")
+
+                    // load map
+                    loadMap(centerLat, centerLong);
                 }
             }
 
@@ -190,6 +254,28 @@ function loadPage()
                 winner.push(businessDetails[0]);
                 winner = JSON.stringify(winner);
                 post("/winner", winner);
+
+                // set center latitude and longitude for map view
+                let str = JSON.stringify(businessDetails[0].coordinates).split(",");
+                let str0 = str[0].split(":");
+                let str1 = str[1].split(":");
+                str1 = str1[1].split("}");
+                centerLat = str0[1];
+                centerLong = str1[0];
+
+                // set business details for map popup
+                let categories = eval(businessDetails[0].categories);
+                winnerCategory = categories[0].title;
+                winnerName = businessDetails[0].name;
+                winnerPhone = businessDetails[0].phone;
+                winnerPrice = businessDetails[0].price;
+                winnerRating = businessDetails[0].rating;
+                winnerReviewCount = businessDetails[0].review_count;
+                winnerUrl = businessDetails[0].url;
+
+                // load map
+                loadMap(centerLat, centerLong);
+
             }
 
             // convert tied array back to set
@@ -387,15 +473,20 @@ function loadPage()
             lat = data.latitude;
             long = data.longitude;
             location = { "latitude": lat, "longitude": long };
+            location = JSON.stringify(location);
+
+            // set center latitude and longitude for map view incase we have more than one winner
+            centerLat = lat;
+            centerLong = long;
 
             // post location
-            location = JSON.stringify(location);
             post("/location", location);
 
 
             // get location businesses
             $.getJSON("/businesses?location=" + location, function(data) {
             businessDetails = data;
+
             lenDetails = businessDetails.length;
 
             for (let i = 0; i < lenDetails; i++) {
