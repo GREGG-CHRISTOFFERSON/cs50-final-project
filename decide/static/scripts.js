@@ -36,6 +36,7 @@ function loadMap(lat, long) {
 
     $("body").append('<div id="mapid"></div>');
 
+    // data for the pop up
     let winnerDetails = "<b>Category: </b>" + winnerCategory.toString() + "<br>" +
                         "<b>Name: </b>" + winnerName + "<br>" +
                         "<b>Phone: </b>" + winnerPhone + "<br>" +
@@ -82,9 +83,19 @@ function isOdd(num) {
 function loadPage()
 {
 
+    // declare loadPage function scope variables
     let lat; // latitude
     let long; // longitude
-    let location;
+    let location; // location we are getting businesses data from
+    let lenDetails; // length of businesses data
+    let businessDetails; // businesses data
+    let photosArray = []; // array of objects used to build slides
+    let imageSelector = 1; // track selector of current image so we can check it
+    let tie = false; // track whether we have a tie
+    let tieCount = 0; // track how many times we have tied in a row
+    let x; // length of array used to build slides
+    let y = 0; // equal to number of views or clicks
+    let winnersLength = 0; // size of new array used to build next round of slides
 
 
 
@@ -96,6 +107,48 @@ function loadPage()
             type: 'POST'
         });
     }
+
+
+// update progress bar
+let percentageLeft = 100; // how far we have to go
+let totalClicks; // total clicks to get to 100 percent progress
+let clicks = 0; // current number of clicks
+let endPercentage = 0; // how far to go after current round of slides is done
+let rounds = 0; // number of times we've reloaded the slides
+
+
+
+function updateProgress(clicks, totalClicks, percentageLeft) {
+
+    console.log("Clicks: " + clicks);
+    console.log("Total Clicks " + totalClicks);
+    console.log("Percentage Left: " + percentageLeft);
+
+    // update the style width property of the progress bar
+    width = Math.round(((clicks / totalClicks) * percentageLeft), 2);
+    if (rounds > 1) {
+        width = width + endPercentage;
+    }
+    console.log("Width: " + width);
+    console.log("End Percentage: " + endPercentage);
+    console.log("*************************************************");
+    $(".progress-bar").attr("style", "width:" + width.toString() + "%");
+
+    // update the aria-valuenow attribute
+    $(".progress-bar").attr("aria-valuenow", width.toString() + "%");
+
+    // update the html text after 3 clicks on first round
+    if (clicks >= 3 && rounds == 1) {
+        $(".progress-bar").html(width.toString() + "%");
+    }
+    else if (rounds > 1) {
+        $(".progress-bar").html(width.toString() + "%");
+    }
+
+    endPercentage = width;
+    // percentageLeft = percentageLeft - endPercentage;
+
+}
 
 
 
@@ -138,17 +191,6 @@ function loadPage()
     }
 
 
-    // declare global variables
-    let lenDetails;
-    let businessDetails;
-    let photosArray = [];
-    let imageSelector = 1;
-    let tie = false;
-    let tieCount = 0;
-    let x;
-    let y = 0;
-
-
 
     // create an object for every photo
     function buildPhotoObjArray(businessPhotos, businessName) {
@@ -174,21 +216,23 @@ function loadPage()
     // check conditions for rebuilding slides
     function checkRebuildConditions(imageSelector) {
 
+        winnersLength = winners.length;
+
         // if all slides have been viewed and winners length is > 1, repeat the above html building, using winners array
-        if (y == x && winners.length > 1) {
+        if (y == x && winnersLength > 1) {
 
             // call function passing winners array.
             rebuildPage(winners);
         }
 
         // otherwise, if all slides have been viewed and winners length is 0 user didn't choose any images. Start over
-        else if (y == x && winners.length == 0) {
+        else if (y == x && winnersLength == 0) {
             imageSelector = 1;
             rebuildPage(photosArray);
         }
 
         // otherwise check for tie or post winner
-        else if (winners.length == 1 && x == y) {
+        else if (winnersLength == 1 && x == y) {
             // sort businessDetails by number of wins
             businessDetails.sort(function(a,b) {
                 return parseFloat(b.wins) - parseFloat(a.wins);
@@ -220,7 +264,6 @@ function loadPage()
                 if (tie == true && tieCount > 0) {
                     alert("we have a tie!");
                     let winners = JSON.stringify(tied);
-                    post("/winner", winners);
 
                     // for each winner, set latitude and longitude for markers
                     alert("Developer hasn't added support for a tie so this app isn't going to work now.  Sorry!  I thought this would never happen! :-(")
@@ -245,15 +288,19 @@ function loadPage()
             // otherwise we must have a winner
             else {
 
-                // post winner
-                alert("We have a winner!  " + businessDetails[0].name + "\n" +
-                      "views: " + y + "\n" +
-                      "length: " + x + "\n" +
-                      "winners length: " + winners.length);
+                // update progress to 100%
+                $(".progress-bar").attr("style", "width:100%");
+
+                // update the aria-valuenow attribute to 100
+                $(".progress-bar").attr("aria-valuenow", "100%");
+
+                // update progress test to 100
+                $(".progress-bar").html("100%");
+
+                alert("We have a winner!  " + businessDetails[0].name);
                 let winner = [];
                 winner.push(businessDetails[0]);
                 winner = JSON.stringify(winner);
-                post("/winner", winner);
 
                 // set center latitude and longitude for map view
                 let str = JSON.stringify(businessDetails[0].coordinates).split(",");
@@ -274,8 +321,9 @@ function loadPage()
                 winnerUrl = businessDetails[0].url;
 
                 // load map
-                loadMap(centerLat, centerLong);
-
+                setTimeout(function() {
+                    loadMap(centerLat, centerLong);
+                }, 1000);
             }
 
             // convert tied array back to set
@@ -286,7 +334,16 @@ function loadPage()
 
             // advance to next slide
             $(".carousel-control-next").click();
+
+            // update progress
+            winnersLength = winners.length;
+            totalClicks = x + winnersLength;
+            clicks++;
+            // percentageLeft = percentageLeft - endPercentage;
+            updateProgress(clicks, totalClicks, percentageLeft);
+
             checkImages(imageSelector);
+
         }
     }
 
@@ -312,6 +369,20 @@ function loadPage()
 
         // empty winners array
         winners = [];
+
+        rounds++;
+
+        clicks = 0;
+        console.log("******************");
+        console.log("Percentage Left: " + percentageLeft);
+        console.log("End Percentage: " + endPercentage);
+
+        if (percentageLeft - endPercentage >= 0) {
+            percentageLeft = percentageLeft - endPercentage;
+        }
+
+        console.log("Percentage Left: " + percentageLeft);
+        console.log("******************");
 
         // clear page
         $("div.carousel-inner1").html("");
