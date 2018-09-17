@@ -115,6 +115,8 @@ let totalClicks; // total clicks to get to 100 percent progress
 let clicks = 0; // current number of clicks
 let endPercentage = 0; // how far to go after current round of slides is done
 let rounds = 0; // number of times we've reloaded the slides
+let lastWidth = 0; // keep track of width from last round
+let width;
 
 
 
@@ -123,15 +125,19 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
     console.log("Clicks: " + clicks);
     console.log("Total Clicks " + totalClicks);
     console.log("Percentage Left: " + percentageLeft);
+    lastWidth = width;
 
     // update the style width property of the progress bar
     width = Math.round(((clicks / totalClicks) * percentageLeft), 2);
-    if (rounds > 1) {
+    if (rounds > 1 && width + endPercentage <= 99) {
         width = width + endPercentage;
+    }
+    else if (rounds > 1) {
+        width = lastWidth;
     }
     console.log("Width: " + width);
     console.log("End Percentage: " + endPercentage);
-    console.log("*************************************************");
+    console.log("*************************************************")
     $(".progress-bar").attr("style", "width:" + width.toString() + "%");
 
     // update the aria-valuenow attribute
