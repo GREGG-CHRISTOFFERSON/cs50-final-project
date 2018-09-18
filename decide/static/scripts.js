@@ -116,18 +116,16 @@ let clicks = 0; // current number of clicks
 let endPercentage = 0; // how far to go after current round of slides is done
 let rounds = 0; // number of times we've reloaded the slides
 let lastWidth = 0; // keep track of width from last round
-let width;
+let width = 0;
 
 
 
 function updateProgress(clicks, totalClicks, percentageLeft) {
 
-    console.log("Clicks: " + clicks);
-    console.log("Total Clicks " + totalClicks);
-    console.log("Percentage Left: " + percentageLeft);
+    // remember the last width
     lastWidth = width;
 
-    // update the style width property of the progress bar
+    // set new width
     width = Math.round(((clicks / totalClicks) * percentageLeft), 2);
     if (rounds > 1 && width + endPercentage <= 99) {
         width = width + endPercentage;
@@ -135,25 +133,27 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
     else if (rounds > 1) {
         width = lastWidth;
     }
-    console.log("Width: " + width);
-    console.log("End Percentage: " + endPercentage);
-    console.log("*************************************************")
-    $(".progress-bar").attr("style", "width:" + width.toString() + "%");
 
-    // update the aria-valuenow attribute
-    $(".progress-bar").attr("aria-valuenow", width.toString() + "%");
+    lastWidth = lastWidth;
 
-    // update the html text after 3 clicks on first round
-    if (clicks >= 3 && rounds == 1) {
-        $(".progress-bar").html(width.toString() + "%");
+
+    // animate the new width
+    move(lastWidth, width);
+    function move(oldWidth, newWidth) {
+        var elem = $(".progress-bar");
+        var width = oldWidth;
+        var id = setInterval(frame, 100);
+        function frame() {
+            if (width >= newWidth) {
+                clearInterval(id);
+            }
+            else {
+                width++;
+                elem.attr("style", "width:" + width + "%");
+                elem.html(width * 1 + "%");
+            }
+        }
     }
-    else if (rounds > 1) {
-        $(".progress-bar").html(width.toString() + "%");
-    }
-
-    endPercentage = width;
-    // percentageLeft = percentageLeft - endPercentage;
-
 }
 
 
