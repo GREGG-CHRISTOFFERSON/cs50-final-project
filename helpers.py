@@ -13,45 +13,6 @@ db = SQL("sqlite:///decide.db")
 api_key = "JPSD1KTG7J2HiXxo4r63wcWAqxMmj0lElhIOl-43xT4HYcEM4WiCbStLOG96HDtIeQMF6eSZF0AXntwxRTEhsCuSF2pY2zNF_rZmVF7JfB3iBe6EDVLf0oW30M1xW3Yx"
 yelp_api = YelpAPI(api_key)
 
-def login_required(f):
-    """
-    Decorate routes to require login.
-
-    http://flask.pocoo.org/docs/0.12/patterns/viewdecorators/
-    """
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if session.get("user_id") is None:
-            return redirect("/login")
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def lookup(geo):
-    """Look up articles for geo"""
-
-    # Check cache
-    try:
-        if geo in lookup.cache:
-            return lookup.cache[geo]
-    except AttributeError:
-        lookup.cache = {}
-
-    # Replace special characters
-    escaped = urllib.parse.quote(geo, safe="")
-
-    # Get feed from Google
-    feed = feedparser.parse(f"https://news.google.com/news/rss/local/section/geo/{escaped}")
-
-    # If no items in feed, get feed from Onion
-    if not feed["items"]:
-        feed = feedparser.parse("http://www.theonion.com/feeds/rss")
-
-    # Cache results
-    lookup.cache[geo] = [{"link": item["link"], "title": item["title"]} for item in feed["items"]]
-
-    # Return results
-    return lookup.cache[geo]
 
 
 def lookup_details(str_location, location_businesses):

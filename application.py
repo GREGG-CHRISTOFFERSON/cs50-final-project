@@ -144,7 +144,6 @@ def businesses():
     location = str(location)
     eprint(location)
 
-    # Look up places for q
     # if business details are in database, no need to look up on yelp
     business_details = db.execute("SELECT * FROM businesses WHERE location = :location", location=location)
     if len(business_details) >= 1:
