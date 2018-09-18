@@ -8,7 +8,7 @@ import re
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
 from cs50 import SQL, eprint
-from helpers import lookup, lookup_details
+from helpers import lookup_details
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
