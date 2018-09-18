@@ -55,7 +55,9 @@ function loadMap(lat, long) {
         // add tile layer to map
         //https://www.mapbox.com/
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> ' +
+                         'contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                         'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
             maxZoom: 18,
             id: 'mapbox.streets',
             accessToken: 'pk.eyJ1IjoiZ2NocmlzdG8yNyIsImEiOiJjamx6dDhrbGcwaHYyM3ZwYXBraWx4aGd4In0.FvDvvPy5xE59eni6x_xJ5Q'
@@ -150,10 +152,19 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
             else {
                 width++;
                 elem.attr("style", "width:" + width + "%");
-                elem.html(width * 1 + "%");
+
+                // update the html text after 2 clicks on first round
+                if (clicks >= 2 && rounds == 1) {
+                    elem.html(width * 1 + "%");
+                }
+                else if (rounds > 1) {
+                    elem.html(width * 1 + "%");
+                }
             }
         }
     }
+
+    endPercentage = width;
 }
 
 
@@ -379,20 +390,13 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
         rounds++;
 
         clicks = 0;
-        console.log("******************");
-        console.log("Percentage Left: " + percentageLeft);
-        console.log("End Percentage: " + endPercentage);
 
         if (percentageLeft - endPercentage >= 0) {
             percentageLeft = percentageLeft - endPercentage;
         }
 
-        console.log("Percentage Left: " + percentageLeft);
-        console.log("******************");
-
         // clear page
-        $("div.carousel-inner1").html("");
-        $("div.carousel-inner2").html("");
+        $("div.carousel-inner").html("");
 
 
 
@@ -427,7 +431,7 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
                 }
 
                 // inject the html for the slides
-                $("div.carousel-inner" + groupNumString).append(
+                $("div.carousel-inner." + groupNumString).append(
                     '<div class="carousel-item">' +
                       '<img id="' + imageID + '" class="d-block w-100 ' +
                       k.toString() + groupNumString + '" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' + '<p>' + splitArray[k].name + '</p>' +
