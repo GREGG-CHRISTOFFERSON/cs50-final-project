@@ -434,7 +434,7 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
                 $("div.carousel-inner." + groupNumString).append(
                     '<div class="carousel-item">' +
                       '<img id="' + imageID + '" class="d-block w-100 ' +
-                      k.toString() + groupNumString + '" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' + '<p>' + splitArray[k].name + '</p>' +
+                      k.toString() + groupNumString + '" src="' + splitArray[k].photo.toString().replace(/[\[\]' ]/g, "") + '">' + '<p>' +
                     '</div>'
                     );
 
