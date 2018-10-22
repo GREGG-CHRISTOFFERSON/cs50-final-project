@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */
 // remember center latitude & longitude for map
 let centerLat;
 let centerLong;
@@ -283,7 +284,7 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
                     let winners = JSON.stringify(tied);
 
                     // for each winner, set latitude and longitude for markers
-                    alert("Developer hasn't added support for a tie so this app isn't going to work now.  Sorry!  I thought this would never happen! :-(")
+                    alert("Developer hasn't added support for a tie so this app isn't going to work now.  Sorry!  I thought this would never happen! :-(");
 
                     // load map
                     loadMap(centerLat, centerLong);
@@ -332,7 +333,7 @@ function updateProgress(clicks, totalClicks, percentageLeft) {
                 winnerCategory = categories[0].title;
                 winnerName = businessDetails[0].name;
                 winnerPhone = businessDetails[0].phone;
-                winnerPrice = businessDetails[0].price;
+                winnerPrice = businessDetails[0].price; 
                 winnerRating = businessDetails[0].rating;
                 winnerReviewCount = businessDetails[0].review_count;
                 winnerUrl = businessDetails[0].url;

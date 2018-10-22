@@ -1,0 +1,19 @@
+{
+  "name": "cs50-final-project",
+  "version": "1.0.0",
+  "description": "Final project for CS50",
+  "main": "application.py",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GREGG-CHRISTOFFERSON/cs50-final-project.git"
+  },
+  "author": "Gregg Christofferson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GREGG-CHRISTOFFERSON/cs50-final-project/issues"
+  },
+  "homepage": "https://github.com/GREGG-CHRISTOFFERSON/cs50-final-project#readme"
+}
