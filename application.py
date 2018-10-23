@@ -4,12 +4,12 @@ import datetime
 import json
 import os
 import re
-import sqlalchemy_declarative 
+# import sqlalchemy_declarative 
 
 from cs50 import eprint
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
-# from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from helpers import lookup_details
 from passlib.context import CryptContext
 from pprint import pprint
